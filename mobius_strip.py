@@ -1,0 +1,72 @@
+
+
+import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+
+class MobiusStrip:
+    def __init__(self, R, w, n):
+        self.R = R
+        self.w = w
+        self.n = n
+
+    def parametric_equations(self, u, v):
+        x = (self.R + v * np.cos(u/2)) * np.cos(u)
+        y = (self.R + v * np.cos(u/2)) * np.sin(u)
+        z = v * np.sin(u/2)
+        return x, y, z
+
+    def generate_mesh(self):
+        u = np.linspace(0, 2*np.pi, self.n)
+        v = np.linspace(-self.w/2, self.w/2, self.n)
+        u, v = np.meshgrid(u, v)
+        x, y, z = self.parametric_equations(u, v)
+        return x, y, z
+
+    def surface_area(self):
+        u = np.linspace(0, 2*np.pi, self.n)
+        v = np.linspace(-self.w/2, self.w/2, self.n)
+        du = u[1] - u[0]
+        dv = v[1] - v[0]
+        area = 0
+        for i in range(self.n-1):
+            for j in range(self.n-1):
+                u_val = u[i]
+                v_val = v[j]
+                x_u, y_u, z_u = self.parametric_equations(u_val + du/2, v_val)
+                x_v, y_v, z_v = self.parametric_equations(u_val, v_val + dv/2)
+                x_u_prev, y_u_prev, z_u_prev = self.parametric_equations(u_val - du/2, v_val)
+                x_v_prev, y_v_prev, z_v_prev = self.parametric_equations(u_val, v_val - dv/2)
+                dS_u = np.sqrt((x_u - x_u_prev)**2 + (y_u - y_u_prev)**2 + (z_u - z_u_prev)**2)
+                dS_v = np.sqrt((x_v - x_v_prev)**2 + (y_v - y_v_prev)**2 + (z_v - z_v_prev)**2)
+                area += dS_u * dS_v
+        return area
+
+    def edge_length(self):
+        u = np.linspace(0, 2*np.pi, self.n)
+        v = self.w/2 * np.ones(self.n)
+        x, y, z = self.parametric_equations(u, v)
+        length = 0
+        for i in range(self.n-1):
+            length += np.sqrt((x[i+1] - x[i])**2 + (y[i+1] - y[i])**2 + (z[i+1] - z[i])**2)
+        return length
+
+# Create a Mobius strip
+mobius_strip = MobiusStrip(R=1, w=0.5, n=100)
+
+# Generate mesh
+x, y, z = mobius_strip.generate_mesh()
+
+# Plot the Mobius strip
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+ax.plot_surface(x, y, z, cmap='viridis', edgecolor='none')
+plt.show()
+
+# Calculate surface area and edge length
+surface_area = mobius_strip.surface_area()
+edge_length = mobius_strip.edge_length()
+print(f"Surface Area: {surface_area}")
+print(f"Edge Length: {edge_length}")
+
+
